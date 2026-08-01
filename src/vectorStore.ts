@@ -18,7 +18,7 @@ export class VectorStore {
   constructor(plugin: any) {
     this.plugin = plugin;
     this.db = new Dexie('nyxa-vector-store') as any;
-    this.db.version(1).stores({ chunks: '++id, path, updatedAt' });
+    this.db.version(2).stores({ chunks: '++id, path, updatedAt' });
     this.db.open().catch((e) => console.error('Failed to open Dexie db', e));
   }
 
@@ -41,14 +41,18 @@ export class VectorStore {
     return await this.db.chunks.toArray();
   }
 
+  async updateChunkEmbedding(id: number, embeddingBase64: string) {
+    await this.db.chunks.update(id, { embedding: embeddingBase64, updatedAt: Date.now() });
+  }
+
   async getTopKByEmbedding(targetEmbedding: number[], k = 6): Promise<ChunkRow[]> {
     // brute-force compute cosine similarity against stored embeddings (if available)
     const rows = await this.db.chunks.toArray();
-    // If embeddings are not stored, return empty; embeddings generation happens elsewhere
     const scored: { row: ChunkRow; score: number }[] = [];
     for (const row of rows) {
       if (!row.embedding) continue;
       const emb = base64ToFloat32(row.embedding);
+      if (emb.length !== targetEmbedding.length) continue;
       const score = cosineSimilarity(emb, targetEmbedding);
       scored.push({ row, score });
     }
