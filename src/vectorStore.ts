@@ -73,8 +73,32 @@ export class VectorStore {
     }
   }
 
+  async updateMemory(id: number, patch: Partial<Memory>) {
+    try {
+      await this.db.memories.update(id, Object.assign({}, patch, { updatedAt: Date.now() }));
+    } catch (e) {
+      console.error('updateMemory failed', e);
+    }
+  }
+
   async updateMemoryEmbedding(id: number, embeddingBase64: string) {
     await this.db.memories.update(id, { embedding: embeddingBase64, updatedAt: Date.now() } as any);
+  }
+
+  async touchMemory(id: number) {
+    try {
+      await this.db.memories.update(id, { lastAccessed: Date.now() } as any);
+    } catch (e) {
+      console.error('touchMemory failed', e);
+    }
+  }
+
+  async pinMemory(id: number) {
+    try {
+      await this.db.memories.update(id, { importance: 1.0, updatedAt: Date.now() } as any);
+    } catch (e) {
+      console.error('pinMemory failed', e);
+    }
   }
 
   async getAllMemories(): Promise<MemoryRow[]> {

@@ -1,1 +1,1 @@
-Update: add memory model, memory extractor, memory worker, memory sidebar, and wire into plugin lifecycle.
+Add memory UX & feedback: edit modal, upvote/downvote, pin, insert/create-note actions, and vectorstore update methods.

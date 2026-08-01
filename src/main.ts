@@ -56,6 +56,16 @@ export default class NyxaPlugin extends Plugin {
     });
 
     this.addCommand({
+      id: 'nyxa-open-memories',
+      name: 'Nyxa: Open Memories',
+      callback: async () => {
+        const leaf = this.app.workspace.getRightLeaf(false);
+        await leaf.setViewState({ type: VIEW_TYPE_NYXA_MEMORIES, active: true });
+        this.app.workspace.revealLeaf(leaf);
+      }
+    });
+
+    this.addCommand({
       id: 'nyxa-reindex',
       name: 'Nyxa: Reindex Vault',
       callback: async () => {
