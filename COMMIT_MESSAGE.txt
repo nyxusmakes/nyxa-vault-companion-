@@ -1,1 +1,1 @@
-Add embedding worker integration: commands to start embedding worker, auto-run after reindex toggle, and provider adapters for OpenRouter and Google.
+Update: add memory model, memory extractor, memory worker, memory sidebar, and wire into plugin lifecycle.
