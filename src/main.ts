@@ -1,17 +1,19 @@
-import { App, Plugin, PluginSettingTab, Setting, WorkspaceLeaf, ItemView } from 'obsidian';
+import { App, Plugin, Notice } from 'obsidian';
 import { NyxaSettings, DEFAULT_SETTINGS, NyxaSettingTab } from './settings';
 import { AskModal } from './ui/AskModal';
 import { ChatSidebar, VIEW_TYPE_NYXA } from './ui/ChatSidebar';
 import { Indexer } from './indexer';
 import { VectorStore } from './vectorStore';
 import { EmbeddingsProvider } from './embeddingsProvider';
+import { EmbeddingsWorker } from './embeddingsWorker';
+import { EmbeddingModal } from './ui/EmbeddingModal';
 
 export default class NyxaPlugin extends Plugin {
   settings: NyxaSettings;
   indexer: Indexer;
   vectorStore: VectorStore;
   embeddings: EmbeddingsProvider;
-  chatLeaf: WorkspaceLeaf | null = null;
+  embeddingsWorker: EmbeddingsWorker;
 
   async onload() {
     console.log('Loading Nyxa Vault Companion');
@@ -23,6 +25,8 @@ export default class NyxaPlugin extends Plugin {
     await this.vectorStore.init();
 
     this.embeddings = new EmbeddingsProvider(this.settings);
+
+    this.embeddingsWorker = new EmbeddingsWorker(this.vectorStore, this.embeddings, 8);
 
     this.indexer = new Indexer(this.app, this.vectorStore, this.settings);
     await this.indexer.init();
@@ -39,7 +43,6 @@ export default class NyxaPlugin extends Plugin {
       id: 'nyxa-open-chat',
       name: 'Nyxa: Open Chat',
       callback: async () => {
-        // open the Nyxa view
         const leaf = this.app.workspace.getRightLeaf(false);
         await leaf.setViewState({ type: VIEW_TYPE_NYXA, active: true });
         this.app.workspace.revealLeaf(leaf);
@@ -52,6 +55,34 @@ export default class NyxaPlugin extends Plugin {
       callback: async () => {
         await this.indexer.indexAll();
         new Notice('Nyxa: Reindex complete');
+        if (this.settings.autoEmbedAfterReindex) {
+          // show embedding modal and run worker
+          const modal = new EmbeddingModal(this.app);
+          modal.open();
+          this.embeddingsWorker.runUntilEmpty((processed, remaining) => {
+            modal.setProgress(processed, remaining);
+            if (remaining <= 0) {
+              modal.close();
+              new Notice('Nyxa: embeddings complete');
+            }
+          });
+        }
+      }
+    });
+
+    this.addCommand({
+      id: 'nyxa-start-embedding-worker',
+      name: 'Nyxa: Start embedding worker',
+      callback: async () => {
+        const modal = new EmbeddingModal(this.app);
+        modal.open();
+        await this.embeddingsWorker.runUntilEmpty((processed, remaining) => {
+          modal.setProgress(processed, remaining);
+          if (remaining <= 0) {
+            modal.close();
+            new Notice('Nyxa: embeddings complete');
+          }
+        });
       }
     });
 

@@ -14,10 +14,8 @@ export class Indexer {
   }
 
   async init() {
-    // initial crawl
     await this.indexAll();
 
-    // watch for changes
     this.app.vault.on('modify', async (file) => {
       if (file instanceof TFile) {
         await this.indexFile(file);
@@ -48,7 +46,6 @@ export class Indexer {
   async indexFile(file: TFile) {
     try {
       const content = await this.app.vault.read(file);
-      // naive chunking
       const chunkSize = this.settings.chunkSize || 500;
       const overlap = this.settings.chunkOverlap || 50;
       let start = 0;

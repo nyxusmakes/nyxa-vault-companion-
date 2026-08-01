@@ -1,1 +1,1 @@
-Update: Added embeddings worker, provider support for ollama & claude, and vectorstore embedding updates.
+Add embedding worker integration: commands to start embedding worker, auto-run after reindex toggle, and provider adapters for OpenRouter and Google.
