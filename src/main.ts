@@ -11,6 +11,8 @@ import { ChatSidebar, VIEW_TYPE_NYXA } from './ui/ChatSidebar';
 import { EmbeddingModal } from './ui/EmbeddingModal';
 import { NyxaSettingTab } from './settings';
 import { Plugin } from 'obsidian';
+import { StyleWorker } from './styleWorker';
+import * as persona from './persona';
 
 export default class NyxaPlugin extends Plugin {
   settings: NyxaSettings;
@@ -19,6 +21,8 @@ export default class NyxaPlugin extends Plugin {
   embeddings: EmbeddingsProvider;
   embeddingsWorker: EmbeddingsWorker;
   memoryWorker: MemoryWorker | null = null;
+  styleWorker: StyleWorker | null = null;
+  persona: typeof persona | null = null;
 
   async onload() {
     console.log('Loading Nyxa Vault Companion');
@@ -36,6 +40,10 @@ export default class NyxaPlugin extends Plugin {
 
     this.indexer = new Indexer(this.app, this.vectorStore, this.settings);
     await this.indexer.init();
+
+    // style worker and persona
+    this.styleWorker = new StyleWorker(this.settings, this.embeddings);
+    this.persona = persona;
 
     this.addCommand({
       id: 'nyxa-ask-ai',
@@ -126,6 +134,33 @@ export default class NyxaPlugin extends Plugin {
             new Notice('Nyxa: memory extraction complete');
           }
         });
+      }
+    });
+
+    this.addCommand({
+      id: 'nyxa-compute-style-embedding',
+      name: 'Nyxa: Compute style embedding',
+      callback: async () => {
+        if (!this.styleWorker) return;
+        try {
+          const b64 = await this.styleWorker.computeStyleEmbeddingFromPaths(this.settings.styleSourcePaths || '', async (path: string) => {
+            try {
+              const file = await this.app.vault.getAbstractFileByPath(path);
+              if (!file || !('path' in file)) return null;
+              const content = await this.app.vault.read(file as any);
+              return content;
+            } catch (e) {
+              console.error('Failed fetching text for style embedding', path, e);
+              return null;
+            }
+          });
+          this.settings.styleEmbedding = b64;
+          await this.saveData(this.settings);
+          new Notice('Nyxa: style embedding computed and saved');
+        } catch (e) {
+          console.error(e);
+          new Notice('Nyxa: failed to compute style embedding — see console');
+        }
       }
     });
 

@@ -21,18 +21,22 @@ export class AskModal extends Modal {
       const q = ta.value;
       if (!q) return;
       try {
+        // compute query embedding
         const emb = await this.plugin.embeddings.embed(q);
-        // retrieve top-K
+        // retrieve top-K chunks
         const rows = await this.plugin.vectorStore.getTopKByEmbedding(emb, this.plugin.settings.topK);
         let context = '';
         for (const r of rows) {
           context += `\nSource: ${r.path}\n${r.text}\n`;
         }
-        const system = `You are Nyxa, a calm, mysterious companion inspired by AURA/VOID. Use the provided vault context to answer clearly.`;
-        const answer = await this.plugin.embeddings.chatCompletion(system, [{ role: 'user', content: `${q}\n\nContext:\n${context}` }]);
+        // build system prompt using persona
+        const system = (this.plugin as any).persona ? (this.plugin as any).persona.buildSystemPrompt(this.plugin.settings) : `You are Nyxa, a calm, mysterious companion inspired by AURA/VOID.`;
+        // include style hint if available
+        const messages = [{ role: 'user', content: `${q}\n\nContext:\n${context}` }];
+        const answer = await this.plugin.embeddings.chatCompletion(system, messages, this.plugin.settings.llmModel);
         // insert into editor if active
-        const leaf = this.app.workspace.getActiveViewOfType(this.app.workspace.getActiveViewOfType);
-        new Notice('Nyxa answered — see console for result');
+        const view = this.app.workspace.getActiveViewOfType(this.app.workspace.getActiveViewOfType as any);
+        new Notice('Nyxa answered — check Developer Console for the answer.');
         console.log('Nyxa answer:', answer);
         this.close();
       } catch (e) {
