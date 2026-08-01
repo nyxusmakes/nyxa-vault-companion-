@@ -1,0 +1,11 @@
+{
+  "id": "nyxa-vault-companion",
+  "name": "Nyxa Vault Companion",
+  "version": "0.1.0",
+  "minAppVersion": "1.5.0",
+  "description": "An AI companion that indexes your vault and provides a persistent chat and RAG assistant.",
+  "author": "nyxusmakes",
+  "authorUrl": "",
+  "isDesktopOnly": false,
+  "main": "dist/main.js"
+}

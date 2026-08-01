@@ -1,0 +1,10 @@
+# Nyxa Vault Companion
+
+This commit adds the initial TypeScript Obsidian plugin scaffold for Nyxa:
+- Commands: Ask AI, Open Chat, Reindex Vault
+- Sidebar companion (basic view)
+- Dexie-based vector store scaffold
+- Indexer with naive chunking and file watchers
+- Embeddings provider abstraction with OpenAI implementation
+
+This is a first MVP commit. Further iterations will add provider adapters, better UI, and long-term memory features.

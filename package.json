@@ -1,0 +1,21 @@
+{
+  "name": "nyxa-vault-companion",
+  "version": "0.1.0",
+  "description": "An AI companion for Obsidian.",
+  "main": "dist/main.js",
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w",
+    "prepublishOnly": "npm run build"
+  },
+  "author": "nyxusmakes",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/dexie": "^3.0.3",
+    "@types/node": "^18.0.0",
+    "dexie": "^3.2.2",
+    "rollup": "^3.0.0",
+    "rollup-plugin-typescript2": "^0.31.1",
+    "typescript": "^4.9.5"
+  }
+}
